@@ -507,5 +507,74 @@ end
 updateDBallList()
 while true do
     wait(15)
+ updateDBallList()
+end
+
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "PositionGui"
+screenGui.Parent = playerGui
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 220, 0, 50)
+frame.Position = UDim2.new(0, 10, 0, 10)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.BackgroundTransparency = 0.3
+frame.BorderSizePixel = 0
+frame.Parent = screenGui
+
+local textLabel = Instance.new("TextLabel")
+textLabel.Size = UDim2.new(1, -10, 1, -10)
+textLabel.Position = UDim2.new(0, 5, 0, 5)
+textLabel.BackgroundTransparency = 1
+textLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+textLabel.Font = Enum.Font.SourceSansBold
+textLabel.TextSize = 22
+textLabel.TextXAlignment = Enum.TextXAlignment.Left
+textLabel.TextYAlignment = Enum.TextYAlignment.Center
+textLabel.Parent = frame
+
+local clickButton = Instance.new("TextButton")
+clickButton.Size = UDim2.new(1, 0, 1, 0)
+clickButton.BackgroundTransparency = 1
+clickButton.Text = ""
+clickButton.Parent = frame
+
+local currentPosText = ""
+
+local function updatePosition()
+    local character = player.Character
+    if character then
+        local hrp = character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local pos = hrp.Position
+            currentPosText = string.format("%.2f, %.2f, %.2f", pos.X, pos.Y, pos.Z)
+            textLabel.Text = "Position:\nX: " .. string.format("%.2f", pos.X) .. "\nY: " .. string.format("%.2f", pos.Y) .. "\nZ: " .. string.format("%.2f", pos.Z)
+        else
+            textLabel.Text = "HumanoidRootPart not found"
+            currentPosText = ""
+        end
+    else
+        textLabel.Text = "Character not loaded"
+        currentPosText = ""
+    end
+end
+
+clickButton.MouseButton1Click:Connect(function()
+    if currentPosText ~= "" then
+        setclipboard(currentPosText)
+        textLabel.Text = currentPosText .. "\n(copied!)"
+        wait(1)
+        updatePosition()
+    end
+end)
+
+while true do
+    updatePosition()
+    wait(1)
+end
+
     updateDBallList()
 end
