@@ -293,8 +293,8 @@ local farmAreas = {
     {Name = "11Dd FS Area", Position = Vector3.new(-986.03, -270.49, -198.78)},
     {Name = "10Oc AR Area", Position = Vector3.new(-4021.63, 14732.51, -3369.06)},
     {Name = "1Qid BT Area", Position = Vector3.new(-2949.36, 24574.07, -207.13)},
-    {Name = "2Sxd PP Area", Position = Vector3.new(-2852.73, 5360.68, -557.88)},
-    {Name = "100Qad FS Area", Position = Vector3.new(878.90, 4266.72, -1929.01)},
+    {Name = "2Sxd PP Area", Position = Vector3.new(-2904.30, 5361.06, -584.86)},
+    {Name = "100Qad FS Area", Position = Vector3.new(885.40, 4221.11, -1920.74)},
 }
 
 local function createFarmAreaButton(name, position, parent, yPos)
