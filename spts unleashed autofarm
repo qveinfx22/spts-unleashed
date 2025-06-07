@@ -4,8 +4,18 @@ local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
 local backpack = player:WaitForChild("Backpack")
+
+-- Переменные character и rootPart объявляем вначале
 local character = player.Character or player.CharacterAdded:Wait()
 local rootPart = character:WaitForChild("HumanoidRootPart")
+
+-- Обновляем character и rootPart при каждом появлении персонажа
+local function onCharacterAdded(char)
+    character = char
+    rootPart = character:WaitForChild("HumanoidRootPart")
+end
+
+player.CharacterAdded:Connect(onCharacterAdded)
 
 -- GUI
 local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
@@ -268,19 +278,52 @@ end)
 
 -- === Farm Area Category ===
 
-local btn200QadPP = Instance.new("TextButton", farmAreaCategory)
-btn200QadPP.Size = UDim2.new(0, 320, 0, 45)
-btn200QadPP.Position = UDim2.new(0, 10, 0, 20)
-btn200QadPP.BackgroundColor3 = Color3.fromRGB(90, 130, 255)
-btn200QadPP.TextColor3 = Color3.new(1, 1, 1)
-btn200QadPP.Font = Enum.Font.GothamBold
-btn200QadPP.TextSize = 16
-btn200QadPP.Text = "200Qad PP Area"
-Instance.new("UICorner", btn200QadPP).CornerRadius = UDim.new(0, 10)
+-- Создаем ScrollingFrame для прокрутки списка
+local scrollFrame = Instance.new("ScrollingFrame", farmAreaCategory)
+scrollFrame.Size = UDim2.new(1, -20, 1, -40)  -- Немного отступаем от краёв, чтобы красиво смотрелось
+scrollFrame.Position = UDim2.new(0, 10, 0, 10)
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)  -- Будем обновлять позже
+scrollFrame.ScrollBarThickness = 8
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y  -- Автоматически подгоняем высоту под содержимое
 
-btn200QadPP.MouseButton1Click:Connect(function()
-    rootPart.CFrame = CFrame.new(-2046, 15484, -1867)
-end)
+local farmAreas = {
+    {Name = "200Qad PP Area", Position = Vector3.new(-2046, 15484, -1867)},
+    {Name = "1Td BT Area", Position = Vector3.new(-9319.99, 31641.32, -19318.78)},
+    {Name = "11Dd FS Area", Position = Vector3.new(-986.03, -270.49, -198.78)},
+    {Name = "10Oc AR Area", Position = Vector3.new(-4021.63, 14732.51, -3369.06)},
+    {Name = "1Qid BT Area", Position = Vector3.new(-2949.36, 24574.07, -207.13)},
+    {Name = "2Sxd PP Area", Position = Vector3.new(-2852.73, 5360.68, -557.88)},
+    {Name = "100Qad FS Area", Position = Vector3.new(878.90, 4266.72, -1929.01)},
+}
+
+local function createFarmAreaButton(name, position, parent, yPos)
+    local btn = Instance.new("TextButton", parent)
+    btn.Size = UDim2.new(1, 0, 0, 45)  -- Ширина = ширине ScrollFrame
+    btn.Position = UDim2.new(0, 0, 0, yPos)
+    btn.BackgroundColor3 = Color3.fromRGB(90, 130, 255)
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 16
+    btn.Text = name
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
+
+    btn.MouseButton1Click:Connect(function()
+        rootPart.CFrame = CFrame.new(position)
+    end)
+
+    return btn
+end
+
+-- Создаем кнопки, вертикальный отступ 55, чтобы было немного пространства между ними
+local btnHeight = 45
+local btnSpacing = 10
+for i, area in ipairs(farmAreas) do
+    createFarmAreaButton(area.Name, area.Position, scrollFrame, (i - 1) * (btnHeight + btnSpacing))
+end
+
+-- Обновляем CanvasSize в зависимости от количества кнопок, чтобы работал скролл
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, #farmAreas * (btnHeight + btnSpacing))
 
 -- Состояние свернутости окна
 local isMinimized = false
@@ -306,65 +349,3 @@ close.MouseButton1Click:Connect(function()
     stopFarming()
     gui:Destroy()
 end)
--- ...весь предыдущий код без изменений...
-
--- Дополнительно: Создаём 2 панели справа сверху для отображения координат
-
-local coordsGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-coordsGui.Name = "Coordinates_GUI"
-coordsGui.ResetOnSpawn = false
-coordsGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
-local function createCoordFrame(posX, posY, title)
-    local frame = Instance.new("Frame", coordsGui)
-    frame.Size = UDim2.new(0, 180, 0, 40)
-    frame.Position = UDim2.new(1, -posX, 0, posY)
-    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-    frame.BackgroundTransparency = 0.8
-    frame.BorderSizePixel = 0
-    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
-
-    local titleLabel = Instance.new("TextLabel", frame)
-    titleLabel.Size = UDim2.new(1, -10, 0, 18)
-    titleLabel.Position = UDim2.new(0, 5, 0, 2)
-    titleLabel.Text = title
-    titleLabel.TextColor3 = Color3.fromRGB(150, 180, 255)
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Font = Enum.Font.GothamBold
-    titleLabel.TextSize = 14
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-    local valueLabel = Instance.new("TextLabel", frame)
-    valueLabel.Size = UDim2.new(1, -10, 0, 18)
-    valueLabel.Position = UDim2.new(0, 5, 0, 20)
-    valueLabel.Text = "Loading..."
-    valueLabel.TextColor3 = Color3.new(1, 1, 1)
-    valueLabel.BackgroundTransparency = 1
-    valueLabel.Font = Enum.Font.Gotham
-    valueLabel.TextSize = 14
-    valueLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-    return frame, valueLabel
-end
-
-local playerCoordFrame, playerCoordLabel = createCoordFrame(200, 10, "Player Coordinates")
-local rootPartCoordFrame, rootPartCoordLabel = createCoordFrame(200, 60, "RootPart Coordinates")
-
--- Обновление координат каждую 1/10 секунды
-RunService.Heartbeat:Connect(function()
-    if character and character.Parent then
-        local pos = character.PrimaryPart and character.PrimaryPart.Position or rootPart.Position
-        playerCoordLabel.Text = string.format("X: %.1f  Y: %.1f  Z: %.1f", pos.X, pos.Y, pos.Z)
-    else
-        playerCoordLabel.Text = "No Character"
-    end
-
-    if rootPart and rootPart.Parent then
-        local rp = rootPart.Position
-        rootPartCoordLabel.Text = string.format("X: %.1f  Y: %.1f  Z: %.1f", rp.X, rp.Y, rp.Z)
-    else
-        rootPartCoordLabel.Text = "No RootPart"
-    end
-end)
-
--- ...остальной ваш код...
