@@ -349,3 +349,163 @@ close.MouseButton1Click:Connect(function()
     stopFarming()
     gui:Destroy()
 end)
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local rootPart = character:WaitForChild("HumanoidRootPart")
+
+local function setupCharacter(char)
+    character = char
+    rootPart = character:WaitForChild("HumanoidRootPart")
+    setupHumanoidDeathListener()
+end
+
+player.CharacterAdded:Connect(setupCharacter)
+
+local function setupHumanoidDeathListener()
+    local humanoid = character:WaitForChild("Humanoid")
+    humanoid.Died:Connect(function()
+        print("Player died, waiting for respawn...")
+        -- Ждём следующий персонаж и обновляем rootPart (player.CharacterAdded сработает)
+    end)
+end
+
+setupHumanoidDeathListener()
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "DBallTrackerGUI"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 300, 0, 200)
+frame.Position = UDim2.new(0.5, -150, 0.5, -100)
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+frame.Active = true
+frame.Draggable = true
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+
+local header = Instance.new("TextLabel", frame)
+header.Size = UDim2.new(1, 0, 0, 30)
+header.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+header.Text = "DBall Tracker"
+header.TextColor3 = Color3.fromRGB(180, 200, 255)
+header.Font = Enum.Font.GothamBold
+header.TextSize = 18
+Instance.new("UICorner", header).CornerRadius = UDim.new(0, 10)
+
+local closeBtn = Instance.new("TextButton", header)
+closeBtn.Size = UDim2.new(0, 25, 0, 25)
+closeBtn.Position = UDim2.new(1, -30, 0, 2)
+closeBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+closeBtn.Text = "X"
+closeBtn.TextColor3 = Color3.new(1,1,1)
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 18
+Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1,0)
+
+closeBtn.MouseButton1Click:Connect(function()
+    gui:Destroy()
+end)
+
+local scrollFrame = Instance.new("ScrollingFrame", frame)
+scrollFrame.Size = UDim2.new(1, -20, 1, -40)
+scrollFrame.Position = UDim2.new(0, 10, 0, 35)
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+scrollFrame.ScrollBarThickness = 8
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+
+local UIListLayout = Instance.new("UIListLayout", scrollFrame)
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 5)
+
+-- Уведомление о появлении DBall
+local notification = Instance.new("Frame", gui)
+notification.Size = UDim2.new(0, 400, 0, 80) -- стало больше
+notification.Position = UDim2.new(0.5, -200, 0.4, 0) -- ближе к центру экрана, чуть выше центра
+notification.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+notification.Visible = false
+Instance.new("UICorner", notification).CornerRadius = UDim.new(0, 15)
+
+local notifText = Instance.new("TextLabel", notification)
+notifText.Size = UDim2.new(1, -50, 1, 0)
+notifText.Position = UDim2.new(0, 10, 0, 0)
+notifText.BackgroundTransparency = 1
+notifText.TextColor3 = Color3.fromRGB(220, 240, 255)
+notifText.Font = Enum.Font.GothamBold
+notifText.TextSize = 28 -- увеличенный размер текста
+notifText.TextXAlignment = Enum.TextXAlignment.Center
+notifText.Text = "DBall appeared!"
+
+local notifCloseBtn = Instance.new("TextButton", notification)
+notifCloseBtn.Size = UDim2.new(0, 35, 0, 35)
+notifCloseBtn.Position = UDim2.new(1, -45, 0, 10)
+notifCloseBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+notifCloseBtn.Text = "X"
+notifCloseBtn.TextColor3 = Color3.new(1,1,1)
+notifCloseBtn.Font = Enum.Font.GothamBold
+notifCloseBtn.TextSize = 20
+Instance.new("UICorner", notifCloseBtn).CornerRadius = UDim.new(1,0)
+
+notifCloseBtn.MouseButton1Click:Connect(function()
+    notification.Visible = false
+end)
+
+local function clearDBallButtons()
+    for _, child in ipairs(scrollFrame:GetChildren()) do
+        if child:IsA("TextButton") then
+            child:Destroy()
+        end
+    end
+end
+
+local function createDBallButton(dball)
+    local btn = Instance.new("TextButton", scrollFrame)
+    btn.Size = UDim2.new(1, 0, 0, 35)
+    btn.BackgroundColor3 = Color3.fromRGB(70, 70, 100)
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 16
+    btn.Text = dball.Name
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+
+    btn.MouseButton1Click:Connect(function()
+        if rootPart and dball and dball.Position then
+            rootPart.CFrame = CFrame.new(dball.Position + Vector3.new(0, 3, 0))
+        end
+    end)
+end
+
+local function updateDBallList()
+    local dballs = {}
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and obj.Name:lower():find("dball") then
+            -- Игнорируем midball
+            if not obj.Name:lower():find("midball") then
+                table.insert(dballs, obj)
+            end
+        end
+    end
+
+    if #dballs > 0 then
+        notification.Visible = true
+    else
+        notification.Visible = false
+    end
+
+    clearDBallButtons()
+    for _, dball in ipairs(dballs) do
+        createDBallButton(dball)
+    end
+end
+
+updateDBallList()
+while true do
+    wait(15)
+    updateDBallList()
+end
