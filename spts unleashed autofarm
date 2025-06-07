@@ -509,7 +509,7 @@ while true do
     wait(15)
  updateDBallList()
 end
-
+ 
 local player = game.Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
@@ -574,7 +574,4 @@ end)
 while true do
     updatePosition()
     wait(1)
-end
-
-    updateDBallList()
 end
